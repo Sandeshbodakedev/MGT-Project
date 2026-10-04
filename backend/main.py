@@ -45,10 +45,18 @@ from fastapi import Request
 
 @app.middleware("http")
 async def log_request_path(request: Request, call_next):
-    # If path arrives without /api (e.g. /health), normalize to /api/health
-    path = request.scope.get("path", "")
-    if path and not path.startswith("/api"):
-        request.scope["path"] = f"/api{path}"
+    # Support Vercel query parameter path forwarding
+    real_path = request.query_params.get("__path__")
+    if real_path:
+        if not real_path.startswith("/"):
+            real_path = f"/{real_path}"
+        if not real_path.startswith("/api"):
+            real_path = f"/api{real_path}"
+        request.scope["path"] = real_path
+    else:
+        path = request.scope.get("path", "")
+        if path and not path.startswith("/api"):
+            request.scope["path"] = f"/api{path}"
     return await call_next(request)
 
 @app.get("/api/health")
