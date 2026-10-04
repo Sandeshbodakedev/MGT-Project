@@ -53,10 +53,6 @@ async def log_request_path(request: Request, call_next):
         if not real_path.startswith("/api"):
             real_path = f"/api{real_path}"
         request.scope["path"] = real_path
-    else:
-        path = request.scope.get("path", "")
-        if path and not path.startswith("/api"):
-            request.scope["path"] = f"/api{path}"
     return await call_next(request)
 
 @app.get("/api/health")
