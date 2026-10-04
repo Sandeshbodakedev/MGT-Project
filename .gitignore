@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+venv/
+.tools/
+
+# Build outputs
+dist/
+frontend/dist/
+
+# SQLite & Logs
+*.db
+*.sqlite
+*.sqlite3
+*.log
+
+# Environment & IDE
+.env
+.env.local
+.DS_Store
+.vscode/
+.idea/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
