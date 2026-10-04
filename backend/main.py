@@ -44,12 +44,10 @@ app.add_middleware(
 from fastapi import Request
 
 @app.middleware("http")
-async def fix_vercel_path(request: Request, call_next):
+async def log_request_path(request: Request, call_next):
+    # If path arrives without /api (e.g. /health), normalize to /api/health
     path = request.scope.get("path", "")
-    matched_path = request.headers.get("x-matched-path")
-    if matched_path and matched_path.startswith("/api"):
-        request.scope["path"] = matched_path
-    elif not path.startswith("/api"):
+    if path and not path.startswith("/api"):
         request.scope["path"] = f"/api{path}"
     return await call_next(request)
 
@@ -57,6 +55,15 @@ async def fix_vercel_path(request: Request, call_next):
 @app.get("/health")
 def health_check():
     return {"status": "ok", "timestamp": datetime.utcnow().isoformat()}
+
+@app.get("/api/index.py")
+@app.get("/index.py")
+def vercel_index_diagnostic(request: Request):
+    return {
+        "status": "ok",
+        "scope_path": request.scope.get("path"),
+        "headers": dict(request.headers)
+    }
 
 
 # ==========================================
