@@ -41,6 +41,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from fastapi import Request
+
+@app.middleware("http")
+async def fix_vercel_path(request: Request, call_next):
+    # If routed by Vercel serverless rewrite, restore original matched path
+    matched_path = request.headers.get("x-matched-path")
+    if matched_path and matched_path != request.scope.get("path"):
+        request.scope["path"] = matched_path
+    return await call_next(request)
+
 @app.get("/api/health")
 def health_check():
     return {"status": "ok", "timestamp": datetime.utcnow().isoformat()}
@@ -694,7 +704,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
 frontend_dist = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend", "dist")
-if os.path.exists(frontend_dist):
+if os.path.exists(frontend_dist) and not os.getenv("VERCEL"):
     assets_dir = os.path.join(frontend_dist, "assets")
     if os.path.exists(assets_dir):
         app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
